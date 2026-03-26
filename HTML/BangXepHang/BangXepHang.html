@@ -71,7 +71,7 @@
   // Hàm gọi API từ Backend (Chỉ gọi 1 lần khi load web)
   async function fetchLeaderboard() {
     try {
-      const response = await fetch('http://localhost:3000/api/leaderboard');
+      const response = await fetch('https://bbe-pegasus-chapter-web.onrender.com/api/leaderboard');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
