@@ -13,13 +13,12 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
 
 body {
   font-family: 'Be Vietnam Pro', sans-serif;
   background: var(--navy);
   color: var(--white);
-  overflow-x: hidden; 
+  overflow-x: clip; 
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -35,14 +34,27 @@ body::before {
 }
 
 /* ══════════════════════════════
-   NAV CHUẨN (DÙNG CHUNG)
+   NAV CHUẨN (ĐÃ NÂNG CẤP STICKY)
 ══════════════════════════════ */
 nav {
-  position: relative; 
-  z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; /* Neo chặt thanh điều hướng khi cuộn qua nó */
+  top: 0; /* Neo sát rạt mép trên cùng của trình duyệt */
+  z-index: 999; /* Đảm bảo nó luôn nổi lên trên cùng, không bị danh sách đè lên */
+  
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
   padding: 0 3rem;
   height: 90px;
+
+  /* 💎 Tuyệt chiêu Glassmorphism (Kính mờ) */
+  background: rgba(10, 10, 42, 0.85); /* Lấy màu nền navy nhưng cho hơi trong suốt */
+  backdrop-filter: blur(12px); /* Làm mờ phần nền bị đè phía sau trông cực kỳ Premium */
+  -webkit-backdrop-filter: blur(12px); /* Hỗ trợ cho Safari (iPhone/Mac) */
+  
+  /* Thêm một đường viền siêu mỏng ở dưới đáy để phân tách rõ ràng với nội dung */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Đổ bóng nhẹ xuống dưới */
 }
 
 .nav-left {
@@ -189,7 +201,7 @@ nav {
 
 .lb-container {
   width: 100%;
-  max-width: 10000px;
+  max-width: 1200px; /* Đổi 10000px thành 1200px */
   background: var(--navy-card);
   border-radius: 12px;
   overflow: hidden;
@@ -303,9 +315,26 @@ nav {
 
 /* RESPONSIVE */
 @media (max-width: 850px) {
-  nav { padding: 0 1.5rem; flex-direction: column; height: auto; padding-top: 1rem; gap: 1rem; }
+  nav { 
+    position: relative; /* Thả rông thanh Nav trên điện thoại */
+    padding: 0 1.5rem; 
+    flex-direction: column; 
+    height: auto; 
+    padding-top: 1rem; 
+    gap: 1rem; 
+  }
   .nav-left { flex-direction: column; gap: 1rem; }
-  .lb-grid { grid-template-columns: 60px 2fr 1fr 1fr 1fr; font-size: 0.9rem; padding: 0 10px; }
+  
+  /* Cập nhật lên 6 cột, bóp nhỏ các cột lại để vừa màn hình điện thoại */
+  .lb-grid { 
+    grid-template-columns: 40px 2fr 1fr 1fr 1fr 1fr; 
+    font-size: 0.85rem; /* Cho chữ nhỏ đi một chút xíu nữa */
+    padding: 0 10px; 
+    gap: 5px; /* Ép các cột gần nhau hơn */
+  }
   .page-title { font-size: 2rem; }
-  .lb-header { font-size: 0.9rem; }
+  .lb-header { font-size: 0.85rem; }
+  
+  /* Thu nhỏ cái vòng tròn huy chương trên điện thoại */
+  .circle { width: 24px; height: 24px; font-size: 0.75rem; }
 }
