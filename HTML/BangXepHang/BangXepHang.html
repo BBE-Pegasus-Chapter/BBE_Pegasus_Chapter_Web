@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bảng Xếp Hạng - BBE Pegasus</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../CSS/BangXepHang.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <div class="logo-group">
+      <a href="../../index.html"><img src="../../image/BBE-Logo-01(Màu Trắng).png" alt="Be Better Everyday" class="logo-mark"></a>
+    </div>
+
+    <ul class="nav-menu">
+        <li class="dropdown-parent">
+        <a href="#">Tổng Quan <span class="dropdown-arrow">▼</span></a>
+        <ul class="dropdown-menu">  
+            <li><a href="#">BBE</a></li>
+            <li><a href="#">BBE Pegasus</a></li>
+        </ul>
+        </li>
+      
+      <li><a href="ban-dieu-hanh.html">Ban Điều Hành</a></li>
+      <li><a href="tin-tuc.html">Tin Tức</a></li>
+      <li><a href="#" class="active">Bảng Xếp Hạng</a></li>
+      <li><a href="lien-he.html">Liên Hệ</a></li>
+    </ul>
+  </div>
+
+  <a href="https://forms.gle/3iiJoSXMQrAwZawb9" class="btn-information">Đăng ký ngay</a>
+</nav> 
+
+<section class="leaderboard-section">
+  <h1 class="page-title">Bảng Xếp Hạng</h1>
+
+  <div class="lb-container">
+    <div class="lb-grid lb-header">
+      <div>Thứ Hạng</div>
+      <div>Họ Và Tên</div>
+      <div>Mời Khách</div>
+      <div>Gains</div>
+      <div>My Post</div>
+      <div>KPI</div>
+    </div>
+
+    <div class="lb-body" id="leaderboard-body">
+      <div style="text-align: center; padding: 40px; font-weight: bold; color: var(--orange);">
+        Đang tải dữ liệu từ máy chủ...
+      </div>
+    </div>
+  </div>
+
+  <div id="load-more-container" style="text-align: center; margin-top: 2rem; display: none;">
+    <button id="btn-load-more" class="btn-information" style="padding: 10px 30px; border-radius: 50px; background: transparent; border: 2px solid var(--orange); color: var(--orange);">
+      Xem thêm 
+      <span style="font-size: 0.8rem; margin-left: 5px;">▼</span>
+    </button>
+  </div>
+</section>
+
+<script>
+  // Các biến toàn cục để quản lý dữ liệu hiển thị
+  let allData = [];      
+  let currentIndex = 0;  
+  const itemsPerPage = 10; // Đang để hiện 5 người mỗi lần bấm (Bác có thể đổi số này)
+
+  // Hàm gọi API từ Backend (Chỉ gọi 1 lần khi load web)
+  async function fetchLeaderboard() {
+    try {
+      const response = await fetch('http://localhost:3000/api/leaderboard');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      allData = await response.json(); 
+
+      // Lấy thẻ chứa bảng xếp hạng và xóa dòng chữ "Đang tải..."
+      const container = document.getElementById('leaderboard-body');
+      container.innerHTML = ''; 
+
+      // Bắt đầu in đợt người đầu tiên ra màn hình
+      renderNextBatch();
+
+    } catch (error) {
+      console.error("Lỗi kết nối tới Backend:", error);
+      document.getElementById('leaderboard-body').innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #ff4d4d; font-weight: bold;">
+          Không thể kết nối với máy chủ Database.<br>
+          Vui lòng đảm bảo bạn đang chạy lệnh 'node Database.js' trên Terminal.
+        </div>
+      `;
+    }
+  }
+
+  // Hàm cắt dữ liệu và vẽ ra màn hình
+  function renderNextBatch() {
+    const container = document.getElementById('leaderboard-body');
+    const btnContainer = document.getElementById('load-more-container');
+
+    // Cắt mảng lấy 10 người tiếp theo
+    const nextBatch = allData.slice(currentIndex, currentIndex + itemsPerPage);
+
+    // Vẽ HTML cho 10 người này
+    nextBatch.forEach(user => {
+      let rankHTML = '';
+
+      if (user.rank === 1) {
+        rankHTML = `<div class="medal gold"><div class="ribbon"></div><div class="circle">1</div></div>`;
+      } else if (user.rank === 2) {
+        rankHTML = `<div class="medal silver"><div class="ribbon"></div><div class="circle">2</div></div>`;
+      } else if (user.rank === 3) {
+        rankHTML = `<div class="medal bronze"><div class="ribbon"></div><div class="circle">3</div></div>`;
+      } else {
+        rankHTML = `<span class="rank-number">${user.rank}</span>`;
+      }
+
+      const rowHTML = `
+        <div class="lb-grid lb-row">
+          <div class="rank-box">${rankHTML}</div>
+          <div>${user.name}</div>
+          <div>${user.invited}</div>
+          <div>${user.gains}</div>
+          <div>${user.My_Post}</div>
+          <div>${user.kpi}</div>
+        </div>
+      `;
+
+      container.innerHTML += rowHTML;
+    });
+
+    // Cộng dồn vị trí hiện tại (Ví dụ: 0 -> 10 -> 20)
+    currentIndex += itemsPerPage;
+
+    // Nếu số người đã in ra bằng hoặc lớn hơn tổng số người có trong Database -> Giấu nút đi
+    if (currentIndex >= allData.length) {
+      btnContainer.style.display = 'none';
+    } else {
+      btnContainer.style.display = 'block'; // Nếu chưa hết thì vẫn hiện nút
+    }
+  }
+
+  // Lắng nghe sự kiện click vào nút "Xem thêm"
+  document.getElementById('btn-load-more').addEventListener('click', renderNextBatch);
+
+  // Kích hoạt hàm ngay khi trang web vừa load xong
+  fetchLeaderboard();
+</script>
+
+</body>
+</html>
