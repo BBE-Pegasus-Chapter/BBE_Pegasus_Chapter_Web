@@ -63,12 +63,18 @@
 </section>
 
 <script>
-  // Các biến toàn cục để quản lý dữ liệu hiển thị
   let allData = [];      
   let currentIndex = 0;  
-  const itemsPerPage = 10; // Đang để hiện 5 người mỗi lần bấm (Bác có thể đổi số này)
+  const itemsPerPage = 10; 
 
-  // Hàm gọi API từ Backend (Chỉ gọi 1 lần khi load web)
+  // 🛡️ Tấm khiên thép: Rửa sạch mã độc XSS
+  function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>'"]/g, match => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[match]);
+  }
+
   async function fetchLeaderboard() {
     try {
       const response = await fetch('https://bbe-pegasus-chapter-web.onrender.com/api/leaderboard');
@@ -79,33 +85,31 @@
 
       allData = await response.json(); 
 
-      // Lấy thẻ chứa bảng xếp hạng và xóa dòng chữ "Đang tải..."
       const container = document.getElementById('leaderboard-body');
       container.innerHTML = ''; 
 
-      // Bắt đầu in đợt người đầu tiên ra màn hình
       renderNextBatch();
 
     } catch (error) {
       console.error("Lỗi kết nối tới Backend:", error);
       document.getElementById('leaderboard-body').innerHTML = `
         <div style="text-align: center; padding: 40px; color: #ff4d4d; font-weight: bold;">
-          Không thể kết nối với máy chủ Database.<br>
-          Vui lòng đảm bảo bạn đang chạy lệnh 'node Database.js' trên Terminal.
+          Hệ thống đang tổng hợp dữ liệu hoặc bảo trì.<br>
+          Vui lòng tải lại trang sau ít phút nhé! 🚀
         </div>
       `;
     }
   }
 
-  // Hàm cắt dữ liệu và vẽ ra màn hình
   function renderNextBatch() {
     const container = document.getElementById('leaderboard-body');
     const btnContainer = document.getElementById('load-more-container');
 
-    // Cắt mảng lấy 10 người tiếp theo
     const nextBatch = allData.slice(currentIndex, currentIndex + itemsPerPage);
 
-    // Vẽ HTML cho 10 người này
+    // ⚡ Tối ưu: Tạo một cái giỏ chứa HTML tạm thời
+    let batchHTML = '';
+
     nextBatch.forEach(user => {
       let rankHTML = '';
 
@@ -119,35 +123,32 @@
         rankHTML = `<span class="rank-number">${user.rank}</span>`;
       }
 
-      const rowHTML = `
+      // Nhét vào giỏ + Đeo khiên chống XSS cho TẤT CẢ dữ liệu
+      batchHTML += `
         <div class="lb-grid lb-row">
           <div class="rank-box">${rankHTML}</div>
-          <div>${user.name}</div>
-          <div>${user.invited}</div>
-          <div>${user.gains}</div>
-          <div>${user.My_Post}</div>
-          <div>${user.kpi}</div>
+          <div>${escapeHTML(user.name)}</div>
+          <div>${escapeHTML(user.invited)}</div>
+          <div>${escapeHTML(user.gains)}</div>
+          <div>${escapeHTML(user.My_Post)}</div>
+          <div>${escapeHTML(user.kpi)}</div>
         </div>
       `;
-
-      container.innerHTML += rowHTML;
     });
 
-    // Cộng dồn vị trí hiện tại (Ví dụ: 0 -> 10 -> 20)
+    // Sau khi vòng lặp xong, mới ụp cái giỏ đó vào giao diện (Đúng 1 lần)
+    container.innerHTML += batchHTML;
+
     currentIndex += itemsPerPage;
 
-    // Nếu số người đã in ra bằng hoặc lớn hơn tổng số người có trong Database -> Giấu nút đi
     if (currentIndex >= allData.length) {
       btnContainer.style.display = 'none';
     } else {
-      btnContainer.style.display = 'block'; // Nếu chưa hết thì vẫn hiện nút
+      btnContainer.style.display = 'block'; 
     }
   }
 
-  // Lắng nghe sự kiện click vào nút "Xem thêm"
   document.getElementById('btn-load-more').addEventListener('click', renderNextBatch);
-
-  // Kích hoạt hàm ngay khi trang web vừa load xong
   fetchLeaderboard();
 </script>
 
